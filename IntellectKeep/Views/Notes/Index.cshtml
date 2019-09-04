@@ -1,0 +1,147 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+<style>
+    .note-container {
+        padding-top: 20px;
+    }
+
+    .note-card {
+        padding-bottom: 10px;
+    }
+
+    .form-control {
+        margin-bottom: 5px !important;
+    }
+</style>
+
+<!-- form -->
+<div class="container note-container">
+    <div class="row">
+        <div class="col-sm-3 note-card">
+            <!-- Note -->
+            <div class="">
+
+            </div>
+        </div>
+        <div class="col-sm-6 note-card">
+            <div class="card">
+                <div class="card-body">
+
+                    <input for="Title" name="title" id="TitleTxt" class="form-control form-control-lg" type="text" placeholder="Title" required>
+                    <input for="Discripation" name="desc" id="DescTxt" class="form-control form-control-lg" type="text" placeholder="Descripation" required>
+                    <button type="submit" class="btn btn-primary float-right " onclick="addNote();">Save</button>
+                </div>
+
+            </div>
+        </div>
+        <div class="col-sm-3 note-card">
+            <div class="">
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- alerts -->
+<div class="container">
+    <div class="row" id="Alert">
+
+    </div>
+</div>
+
+
+
+<!-- Notes -->
+<div class="container note-container">
+    <div class="row" id="Notes">
+
+    </div>
+</div>
+
+
+<script>
+    var notes = [];
+    $(document).ready(function () {
+        loadNotes();
+    });
+
+
+    function loadNotes() {
+        //Clear the old data
+        $("#Notes").html('');
+        //Call notes GET api using Jquery Ajax
+        $.ajax({
+            type: 'GET',  // http method
+            url: "/api/Notes/GetNotes",
+            dataType: 'json', // type of response data
+        }).done(function (notesList) {
+            $(notesList).each(function (index, note) {
+                var html = '<div class="col-sm-4 note-card">' +
+                    '<div class="card" >' +
+                    '<div class="card-body">' +
+                    '<h5 class="card-title">' + note.Title + '</h5>' +
+                    '<p class="card-text">' + note.Desc + '</p>' +
+                    '<a href="#" class="glyphicon glyphicon-remove" onClick="deleteNote(' + note.Id + ');">Delete</a>' +
+                    '</div></div></div>';
+                var oldHtml = $("#Notes").html();
+                $("#Notes").html(oldHtml + html);
+            });
+        });
+    }
+
+    //Method to add notes
+    function addNote() {
+        var title = $("#TitleTxt").val();
+        var desc = $("#DescTxt").val();
+        if (title === "") {
+            addValidation("Enter valid data");
+        }
+        else if (desc === "") {
+            addValidation("Enter valid data");
+        }
+        else {
+            //Post Method Called
+            $.ajax({
+                type: 'POST',  // http method
+                url: "/api/Notes/AddNote?title=" + title + "&desc=" + desc
+            }).done(function (response) {
+                //Notes added Successfully
+                addSuccessAlert("Note added Successfully");
+                $("#TitleTxt").val('');
+                $("#DescTxt").val('');
+                loadNotes();
+            });
+        }
+    }
+
+    //Method to delete the note
+    function deleteNote(id) {
+        $.ajax({
+            type: 'POST',  // http method
+            url: "/api/Notes/DeleteNote?id=" + id
+        }).done(function (response) {
+            //Show Success Message
+            addSuccessAlert("Note deleted Successfully");
+            //Re-load notes
+            loadNotes();
+        });
+    }
+
+    //Success Message
+    function addSuccessAlert(msg) {
+        var html = '<div class="alert alert-success">' +
+            '<strong> Success </strong>' + msg + ' </div>';
+        $("#Alert").html(html);
+    }
+
+
+    //Form Validation
+    function addValidation(msg) {
+        var html = '<div class="alert alert-danger" role="alert">' + msg + '</div>';
+        $("#Alert").html(html);
+
+    }
+</script>
